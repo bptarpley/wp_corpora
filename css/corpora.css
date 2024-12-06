@@ -1,0 +1,186 @@
+:root {
+    --corpora--primary--color: #EF3E36;
+    --corpora--secondary--color: #091540;
+    --corpora--foreground--color: #636464;
+    --corpora--background--color: #f2f2f2;
+}
+
+.corpora-admin-table td {
+    vertical-align: top;
+}
+
+.corpora-search-div {
+    max-width: unset!important;
+}
+
+.corpora-search-table-wrapper {
+    overflow-x: scroll;
+    max-width: 100%;
+}
+
+.corpora-search-table-search-div {
+    display: flex;
+    margin-bottom: 5px;
+}
+
+.corpora-search-table-search-box {
+    flex-grow: 1;
+}
+
+.corpora-search-table-search-box, .corpora-search-table-dropdown {
+    color: var(--corpora--foreground--color);
+    height: 40px;
+    font-size: 105%;
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    margin-right: 2px;
+    padding: 5px;
+    width: unset;
+    display: inline-block;
+}
+
+.corpora-search-table-page-size-span label {
+    font-size: 75%;
+}
+
+.corpora-search-table-page-size-dropdown {
+    height: unset!important;
+    font-size: 75%;
+    padding: 5px;
+}
+
+.corpora-search-table-status-div {
+    margin-bottom: 5px;
+}
+
+.corpora-badge {
+    display: inline-flex;
+    padding: 5px;
+    font-size: 75%;
+    font-weight: 700;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    align-items: center;
+    border-radius: 0.25rem;
+}
+
+.corpora-badge.primary {
+    background-color: var(--corpora--primary--color);
+    color: var(--corpora--background--color);
+}
+
+.corpora-badge.secondary {
+    background-color: var(--corpora--secondary--color);
+    color: var(--corpora--background--color);
+}
+
+.corpora-badge.admin {
+    background-color: #2271b1;
+    color: #FFFFFF;
+    margin-bottom: 3px;
+}
+
+.corpora-badge.gray {
+    border: solid 1px gray;
+}
+
+.corpora-remove-criteria {
+    font-size: 95%;
+    margin-left: 5px;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.corpora-toggle-field {
+    margin-left: 5px;
+    cursor: pointer;
+}
+
+.corpora-badge .dashicons, .corpora-badge .dashicons-before:before {
+    width: unset;
+    height: unset;
+}
+
+.corpora-search-table-pagination-span {
+    float: right;
+}
+
+.corpora-pager {
+    color: color-mix(in srgb, white 70%, var(--corpora--foreground--color));
+    cursor: not-allowed;
+    display: inline-flex;
+    align-items: center;
+    vertical-align: middle;
+}
+
+.corpora-pager.enabled {
+    color: var(--corpora--foreground--color);
+    cursor: pointer;
+}
+
+.corpora-search-table-header-row {
+    background-color: var(--corpora--primary--color);
+    color: var(--corpora--background--color);
+    border-bottom: solid 5px var(--corpora--secondary--color);
+}
+
+.corpora-search-table-header-cell {
+    min-width: 200px;
+    text-align: left;
+    padding: 5px;
+    border: 0;
+}
+
+.corpora-search-table-action-header {
+    border: 0;
+    border-left: solid 1px var(--corpora--primary--color);
+}
+
+.corpora-search-table-header-cell[data-sortable=true] {
+    cursor: pointer;
+}
+
+.corpora-search-table-header-cell.asc:after {
+    margin-left: 5px;
+    font-family: "dashicons";
+    content: "\f343";
+}
+
+.corpora-search-table-header-cell.desc:after {
+    margin-left: 5px;
+    font-family: "dashicons";
+    content: "\f347";
+}
+
+.corpora-search-table-cell {
+    color: var(--corpora--foreground--color);
+    vertical-align: top;
+    padding: 5px;
+}
+
+.corpora-search-table-cell a {
+    color: var(--corpora--primary--color)
+}
+
+.corpora-search-table-row {
+    background-color: color-mix(in srgb, white 85%, var(--corpora--secondary--color));
+}
+
+.corpora-search-table-row:nth-of-type(odd) {
+    background-color: color-mix(in srgb, white 95%, var(--corpora--secondary--color));
+}
+
+.corpora-detail-field-div {
+    margin-bottom: 20px;
+}
+
+.iiif-image-value {
+    height: 400px;
+}
+
+.corpora-associated-content-header {
+    margin-bottom: 10px;
+}
