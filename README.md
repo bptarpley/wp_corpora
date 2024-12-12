@@ -45,6 +45,25 @@ Once you've configured your search, click the "Save" button on the modal to have
 
 To cause a search to appear on a given Wordpress page, you'll need to add that search's shortcode. Note in the tabular listing of defined searches, that first column provides the shortcode needed to make that search appear. Simply copy it, and then edit the page in question. If you're using the default block editor for your Wordpress pages, click the "+" symbol to add a new block, and choose the "Shortcode" block. Paste the shortcode you copied from the Corpora settings page and then save the changes to your page. When visiting your page, you should now see that search appear.
 
+### Maps
+The "Maps" area allows you to define maps that can be placed anywhere on a Wordpress page using shortcodes. To define one, click "Create a Map." A pop-up will appear, allowing you to configure the following:
+
+**Map Name** is a label for the map that gets used, ultimately, as the "id" for your map when referencing it in a shortcode.
+
+**Content Type** specifies which Content Type to query when plotting items on the map. The options available here are only those that have a geopoint field or that reference another content type with a geo point field.
+
+**Geopoint Field** allows you to specify which field belonging to the content type chosen should be used for plotting items on the map.
+
+**Location ID Field** allows you to pick the field containing the ID of those individual items plotted once the user zooms in far enough.
+
+**Location Content Type** allows you to specify the content type of the individual items plotted once zoomed in far enough. This can differ from the "Content Type" field above, given that you can choose there a content type that only references other content types with geopoint fields. The "location content type field" allows you to specify which content type actually has the geopoint fields you want plotted on the map. 
+
+**Basemap URI** is for specifying the basemap to use for your map. You can find examples of various basemaps [here](https://alexurquhart.github.io/free-tiles/).
+
+**Location Icon URL** allows you to provide the URL for an image that will be used as the icon for marking individual items plotted on the map.
+
+**Location Icon Color** allows you to specify the color of the icon so that the informational tag will match that color.
+
 ### Colors
 Wordpress themes do not name color variables consistently, so it's difficult to automatically tie into the color scheme of a theme when displaying searches and content. As such, the "Colors" area allows you to define four colors that will be used in various ways to style content coming from Corpora.
 

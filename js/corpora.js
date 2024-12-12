@@ -662,7 +662,9 @@ class CorporaAggregationMap extends HTMLElement {
             while (document.getElementById(`corpora-map-${idSuffix}`)) idSuffix += 1
             this.el.setAttribute('id', `corpora-map-${idSuffix}`)
             this.el.style.height = 'height' in this.config ? this.config.height : '400px'
-            this.el.style.width = 'width' in this.config ? this.config.width : '80%'
+            this.el.style.width = 'width' in this.config ? this.config.width : '90%'
+            this.el.style.marginLeft = 'auto'
+            this.el.style.marginRight = 'auto'
             this.shadowRoot.innerHTML = `
                 <link rel="stylesheet" href="${this.config.plugin_dir_url}/js/leaflet/leaflet.css">
                 <style>
