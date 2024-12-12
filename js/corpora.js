@@ -644,7 +644,8 @@ class CorporaAggregationMap extends HTMLElement {
             'detail_page_url',
             'plugin_dir_url',
             'location_icon_url',
-            'icon_background_color'
+            'icon_background_color',
+            'icon_font_color'
         ]
     }
 
@@ -685,6 +686,7 @@ class CorporaAggregationMap extends HTMLElement {
                         background-color: ${this.config.icon_background_color};
                     }
                     .corpora-aggmap-marker-label {
+                        color: ${this.config.icon_font_color};
                         padding: 5px;
                     }
                 </style>

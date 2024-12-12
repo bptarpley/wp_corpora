@@ -173,6 +173,7 @@
                         basemap_uri="<?php echo $map['basemap_uri'] ?>"
                         location_icon_url="<?php echo $map['location_icon_url'] ?>"
                         icon_background_color="<?php echo $map['location_icon_color'] ?>"
+                        icon_font_color="<?php echo $map['location_font_color'] ?>"
                     ></corpora-aggregation-map>
                     <?php
                 }
@@ -702,6 +703,14 @@
                         </th>
                         <td>
                             <input type="color" id="corpora_map_location_icon_color_box">
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="corpora_map_location_font_color_box">Location Font Color</label>
+                        </th>
+                        <td>
+                            <input type="color" id="corpora_map_location_font_color_box">
                         </td>
                     </tr>
                 </tbody>
@@ -1327,6 +1336,7 @@
                 let basemap_uri_box = jQuery('#corpora_map_basemap_uri_box')
                 let location_icon_url_box = jQuery('#corpora_map_location_icon_url_box')
                 let location_icon_color_box = jQuery('#corpora_map_location_icon_color_box')
+                let location_font_color_box = jQuery('#corpora_map_location_font_color_box')
                 let save_button = jQuery('#corpora_map_options_save_button')
                 let ct_opts = ''
                 let location_ct_opts = ''
@@ -1341,6 +1351,7 @@
                     basemap_uri_box.val('')
                     location_icon_url_box.val('')
                     location_icon_color_box.val('')
+                    location_icon_font_box.val('')
                     save_button.attr('href', 'javascript:save_map();')
                 } else {
                     existing_map = maps[map_index]
@@ -1349,6 +1360,7 @@
                     basemap_uri_box.val(existing_map.basemap_uri)
                     location_icon_url_box.val(existing_map.location_icon_url)
                     location_icon_color_box.val(existing_map.location_icon_color)
+                    location_icon_color_box.val(existing_map.location_font_color ? existing_map.location_font_color : '')
                     save_button.attr('href', `javascript:save_map(${map_index});`)
                 }
 
@@ -1433,7 +1445,8 @@
                     location_ct: jQuery('#corpora_map_location_ct_box').val(),
                     basemap_uri: jQuery('#corpora_map_basemap_uri_box').val(),
                     location_icon_url: jQuery('#corpora_map_location_icon_url_box').val(),
-                    location_icon_color: jQuery('#corpora_map_location_icon_color_box').val()
+                    location_icon_color: jQuery('#corpora_map_location_icon_color_box').val(),
+                    location_font_color: jQuery('#corpora_map_location_font_color_box').val()
                 }
 
                 if (map_index !== null)
