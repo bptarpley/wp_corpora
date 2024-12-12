@@ -670,6 +670,7 @@ class CorporaAggregationMap extends HTMLElement {
                 <link rel="stylesheet" href="${this.config.plugin_dir_url}/js/leaflet/leaflet.css">
                 <style>
                     .corpora-aggmap-marker {
+                        color: ${this.config.icon_font_color};
                         background-color: ${this.config.icon_background_color};
                         border-top-left-radius: 25px;
                         border-bottom-left-radius: 25px;
@@ -749,7 +750,7 @@ class CorporaAggregationMap extends HTMLElement {
                           <text
                             x="${size > 9 ? 17 : 22}"
                             y="25"
-                            stroke="black"
+                            stroke="${this.config.icon_font_color}"
                             stroke-width="1"
                             dy=".3em">
                             ${size.toLocaleString()}  
@@ -795,7 +796,7 @@ class CorporaAggregationMap extends HTMLElement {
                                           <text
                                             x="${clusters[geoTile] > 9 ? 17 : 22}"
                                             y="25"
-                                            stroke="black"
+                                            stroke="${this.config.icon_font_color}"
                                             stroke-width="1"
                                             dy=".3em">
                                             ${clusters[geoTile].toLocaleString()}  
