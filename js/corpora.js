@@ -680,6 +680,8 @@ class CorporaAggregationMap extends HTMLElement {
                         border-radius: 50%;
                         background-image: url('${this.config.location_icon_url}');
                         background-repeat: no-repeat;
+                        background-size: contain;
+                        background-position: center;
                         background-color: ${this.config.icon_background_color};
                     }
                     .corpora-aggmap-marker-label {
