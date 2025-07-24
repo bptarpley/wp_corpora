@@ -32,6 +32,8 @@
         wp_enqueue_script('corpora-openseadragon', plugin_dir_url(__FILE__).'js/openseadragon/openseadragon.min.js');
         wp_enqueue_script('corpora-leaflet', plugin_dir_url(__FILE__).'js/leaflet/leaflet.js');
         wp_enqueue_script('corpora-leaflet-markercluster', plugin_dir_url(__FILE__).'js/leaflet/leaflet.markercluster.js');
+        wp_enqueue_script('rangeslider-marks', plugin_dir_url(__FILE__).'js/tcrs-marks.min.js');
+        wp_enqueue_script('rangeslider', plugin_dir_url(__FILE__).'js/toolcool-range-slider.min.js');
         wp_enqueue_script(
             'corpora-script',
             plugin_dir_url( __FILE__ ).'js/corpora.js',
@@ -571,6 +573,16 @@
                         <td>
                             <select id="corpora_search_ct_box" style="width: 100%; max-width: none!important;">
                                 <option value="">Select a content type for this search</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr id="corpora_search_timeslider_row" style="display: none;">
+                        <th scope="row">
+                            <label for="corpora_search_timeslider_field_box">Timeslider Field</label>
+                        </th>
+                        <td>
+                            <select id="corpora_search_timeslider_field_box" style="width: 100%; max-width: none!important;">
+                                <option value="">None</option>
                             </select>
                         </td>
                     </tr>
@@ -1167,6 +1179,8 @@
                 let name_box = jQuery('#corpora_search_name_box')
                 let display_name_box = jQuery('#corpora_search_display_name_box')
                 let ct_box = jQuery('#corpora_search_ct_box')
+                let timeslider_row = jQuery('#corpora_search_timeslider_row')
+                let timeslider_field_box = jQuery('#corpora_search_timeslider_field_box')
                 let page_size_box = jQuery('#corpora_search_page_size_box')
                 let default_sort_box = jQuery('#corpora_search_default_sort_box')
                 let save_button = jQuery('#corpora_search_field_options_save_button')
@@ -1175,14 +1189,16 @@
                 if (search_index === null) {
                     name_box.val('')
                     display_name_box.prop('checked', true)
+                    timeslider_field_box.val('')
+                    timeslider_row.css('display', 'none')
                     page_size_box.val(25)
                     save_button.attr('href', 'javascript:save_search();')
                     jQuery('#corpora_search_default_sort_direction_asc').prop('checked', true)
                 } else {
                     existing_search = searches[search_index]
+                    console.log(existing_search)
                     save_button.attr('href', `javascript:save_search(${search_index});`)
                     name_box.val(existing_search.name)
-                    console.log(existing_search.display_name)
                     display_name_box.prop('checked', existing_search.display_name)
                     page_size_box.val(existing_search.page_size)
                     if (existing_search.default_sort)
@@ -1222,6 +1238,8 @@
                         ct_selection = ct_selection.split('--')[0]
                     }
                     default_sort_box.html(`<option value=''>None</option>`)
+                    timeslider_field_box.html(`<option value=''>None</option>`)
+                    timeslider_row.css('display', 'none')
 
                     corpus.content_types[ct_selection].fields.map(f => {
                         // setup field options
@@ -1235,6 +1253,21 @@
                             Object.assign(f_opt, existing_search.field_options[f.name])
                         } else {
                             f_opt.show_in_searches = true
+                        }
+
+                        if (['date', 'timespan'].includes(f.type)) {
+                            let selected = ''
+
+                            if (existing_search &&
+                                existing_search.timeslider_field &&
+                                existing_search.timeslider_field === f.name) {
+                                    selected = ' selected'
+                            }
+
+                            timeslider_row.css('display', 'table-row')
+                            timeslider_field_box.append(`
+                                <option value="${f.name}"${selected}>${f.label}</option>
+                            `)
                         }
 
                         field_options.push(f_opt)
@@ -1266,6 +1299,7 @@
                 let name = jQuery('#corpora_search_name_box').val()
                 let ct = jQuery('#corpora_search_ct_box').val()
                 let display_name = jQuery('#corpora_search_display_name_box').is(':checked')
+                let timeslider_field = jQuery('#corpora_search_timeslider_field_box').val()
                 let page_size = parseInt(jQuery('#corpora_search_page_size_box').val())
                 let default_sort_field = jQuery('#corpora_search_default_sort_box').val()
                 let default_sort_direction = jQuery('.corpora-search-default-sort-radio:checked').val()
@@ -1293,6 +1327,8 @@
                     content_type: ct,
                     field_options: field_options
                 }
+
+                if (timeslider_field.length) search['timeslider_field'] = timeslider_field
 
                 if (search_index !== null)
                     searches[search_index] = search

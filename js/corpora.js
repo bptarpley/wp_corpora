@@ -12,6 +12,23 @@ const corporaTemplates = {
                 <select id="corpora_search_table_${params['slug']}_search_select_box" class="corpora-search-table-dropdown" style="display: none;">
                 </select>
             </div>
+            <div id="corpora_search_table_${params['slug']}_timeslider_div" class="corpora-timeslider-div" style="display: none;">
+                <div style="margin-bottom: 10px; width: 100%;">
+                    <span id="corpora_search_table_${params['slug']}_timeslider_field"></span> 
+                    Range: 
+                    <span id="corpora_search_table_${params['slug']}_timeslider_start" class="corpora-badge primary"></span> 
+                    to 
+                    <span id="corpora_search_table_${params['slug']}_timeslider_end" class="corpora-badge primary"></span>
+                </div>
+                
+                <tc-range-slider
+                    id="corpora_search_table_${params['slug']}_timeslider"
+                    class="time-slider"
+                    slider-height="1rem"
+                    keyboard-disabled="true"
+                    mousewheel-disabled="true">
+                </tc-range-slider>
+            </div>
             <div class="corpora-search-table-wrapper">
                 <table id="corpora_search_table_${params['slug']}" class="corpora-search-table">
                     <thead class="corpora-search-table-header">
@@ -164,7 +181,7 @@ const searchPrefixLabelMap = {
 }
 
 const sortableFieldTypes = ['keyword', 'text', 'large_text',
-    'number', 'decimal', 'boolean',
+    'number', 'decimal', 'boolean', 'timespan',
     'date', 'iiif-image', 'cross_reference']
 
 class Corpora {
@@ -226,9 +243,12 @@ class Corpora {
     timespan_string(timespan) {
         let representation = ''
         let uncertain_prefix = 'Around'
+        let granularity = 'Day'
 
         if (timespan.start) {
-            representation += this.date_string(timespan.start, timespan.granularity)
+            if (timespan.granularity) granularity = timespan.granularity
+
+            representation += this.date_string(timespan.start, granularity)
 
             if (timespan.end) {
                 representation += ` – ${this.date_string(timespan.end, timespan.granularity)}`
@@ -241,6 +261,25 @@ class Corpora {
         }
 
         return representation
+    }
+
+    getField(corpus, contentType, fieldName) {
+        let field = null
+
+        if (corpus.content_types && (contentType in corpus.content_types)) {
+            corpus.content_types[contentType].fields.forEach(f => {
+                if (f.name === fieldName) field = f
+            })
+        }
+
+        return field
+    }
+
+    hasProps(obj, path) {
+        return path.split('.').every((prop, i, arr) => {
+            obj = obj?.[prop]
+            return i === arr.length - 1 ? obj !== undefined : obj != null
+        })
     }
 
     get_css_colors() {
@@ -374,6 +413,69 @@ class CorpusSearch {
                 `)
             })
             if (this.fields.length > 1) this.field_selector.show()
+
+            // setup timeslider
+            if (this.search.timeslider_field) {
+                this.timeslider = {
+                    field: this.corpora.getField(this.corpus, this.content_type, this.search.timeslider_field),
+                    div: jQuery(`#corpora_search_table_${this.search.slug}_timeslider_div`),
+                    control: document.getElementById(`corpora_search_table_${this.search.slug}_timeslider`),
+                    timer: null,
+                    colors: this.corpora.get_css_colors(),
+                    field_label: jQuery(`#corpora_search_table_${this.search.slug}_timeslider_field`),
+                    start_label: jQuery(`#corpora_search_table_${this.search.slug}_timeslider_start`),
+                    end_label: jQuery(`#corpora_search_table_${this.search.slug}_timeslider_end`),
+                }
+
+                this.timeslider.div.css('display', 'flex')
+                this.timeslider.field_label.html(this.timeslider.field.label)
+
+                this.get_time_stats(this.timeslider.field)
+                    .then(stats => {
+                        let minYear = parseInt(this.corpora.date_string(stats[0], 'Year'))
+                        let maxYear = parseInt(this.corpora.date_string(stats[1], 'Year'))
+
+                        //while (minYear % 5 !== 0 && minYear > 0) minYear --
+                        //while (maxYear % 5 !== 0 && maxYear < 3000) maxYear ++
+
+                        let years = []
+                        for (let x = minYear; x <= maxYear; x++) years.push(x)
+                        this.timeslider.control.data = years
+
+                        console.log(`${minYear}-${maxYear}`)
+                        this.timeslider.start_label.html(minYear)
+                        this.timeslider.end_label.html(maxYear)
+
+                        this.timeslider.control.sliderWidth = `${this.timeslider.div.width() - 50}px`
+                        this.timeslider.control.value1 = minYear
+                        this.timeslider.control.value2 = maxYear
+                        this.timeslider.control.step = 1
+                        this.timeslider.control.sliderBg = this.timeslider.colors.background
+                        this.timeslider.control.sliderBgFill = this.timeslider.colors.secondary
+                        this.timeslider.control.marksEnabled = true
+                        this.timeslider.control.marksCount = 5
+                        this.timeslider.control.marksValuesCount = 5
+
+                        this.timeslider.control.addEventListener('change', evt => {
+                            let startYear = parseInt(evt.detail.value1)
+                            let endYear = parseInt(evt.detail.value2)
+
+                            this.search_params[`r_${this.search.timeslider_field}`] = `${startYear}to${endYear}`
+                            this.timeslider.start_label.html(startYear)
+                            this.timeslider.end_label.html(endYear)
+
+                            clearTimeout(this.timeslider_timer)
+                            this.timeslider_timer = setTimeout(() => this.load_page(), 1000)
+                        })
+
+                        console.log(this.timeslider)
+                    })
+                //
+
+                // todo: get min and max vals
+                // setup timeslider control
+                // setup timeslider change events
+            }
 
             // default search settings
             this.search_timer = null
@@ -600,6 +702,48 @@ class CorpusSearch {
                 }
             }
         )
+    }
+
+    async get_time_stats(field) {
+        let endPoint = `${this.corpora.host}/api/corpus/${this.corpus.id}/${this.content_type}/?page-size=0`
+        let min = null
+        let max = null
+
+        if (field.type === 'date') {
+            const [minDateReq, maxDateReq] = await Promise.all([
+                fetch(`${endPoint}&a_min_mindate=${field.name}`).then(res => res.json()),
+                fetch(`${endPoint}&a_max_maxdate=${field.name}`).then(res => res.json())
+            ])
+
+            if (
+                this.corpora.hasProps(minDateReq, 'meta.aggregations.mindate') &&
+                this.corpora.hasProps(maxDateReq, 'meta.aggregations.maxdate')
+            ) {
+                min = minDateReq.meta.aggregations.mindate
+                max = maxDateReq.meta.aggregations.maxdate
+            }
+        } else if (field.type === 'timespan') {
+            const [minStartReq, maxStartReq, maxEndReq] = await Promise.all([
+                fetch(`${endPoint}&a_min_minstart=${field.name}.start`).then(res => res.json()),
+                fetch(`${endPoint}&a_max_maxstart=${field.name}.start`).then(res => res.json()),
+                fetch(`${endPoint}&a_max_maxend=${field.name}.end`).then(res => res.json())
+            ])
+
+            if (
+                this.corpora.hasProps(minStartReq, 'meta.aggregations.minstart') &&
+                this.corpora.hasProps(maxStartReq, 'meta.aggregations.maxstart') &&
+                this.corpora.hasProps(maxEndReq, 'meta.aggregations.maxend')
+            ) {
+                let maxEnd = maxEndReq.meta.aggregations.maxend
+
+                min = minStartReq.meta.aggregations.minstart
+                max = maxStartReq.meta.aggregations.maxstart
+
+                if (maxEnd && maxEnd > max) max = maxEnd
+            }
+        }
+
+        return [min, max]
     }
 
     convert_field_value(val, field) {
