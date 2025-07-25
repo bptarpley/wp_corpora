@@ -357,6 +357,13 @@ class CorpusSearch {
         this.content_type = this.search.content_type
         this.view_id = null
 
+        // default search settings
+        this.search_timer = null
+        this.search_params = {
+            'page-size': this.search.page_size,
+            'page': 1,
+        }
+
         if (this.content_type.includes('--')) {
             [this.content_type, this.view_id] = this.content_type.split('--')
         }
@@ -425,63 +432,14 @@ class CorpusSearch {
                     field_label: jQuery(`#corpora_search_table_${this.search.slug}_timeslider_field`),
                     start_label: jQuery(`#corpora_search_table_${this.search.slug}_timeslider_start`),
                     end_label: jQuery(`#corpora_search_table_${this.search.slug}_timeslider_end`),
+                    minYear: 1500,
+                    maxYear: 3000,
+                    initialized: false,
+                    autoUpdating: true
                 }
 
                 this.timeslider.div.css('display', 'flex')
                 this.timeslider.field_label.html(this.timeslider.field.label)
-
-                this.get_time_stats(this.timeslider.field)
-                    .then(stats => {
-                        let minYear = parseInt(this.corpora.date_string(stats[0], 'Year'))
-                        let maxYear = parseInt(this.corpora.date_string(stats[1], 'Year'))
-
-                        //while (minYear % 5 !== 0 && minYear > 0) minYear --
-                        //while (maxYear % 5 !== 0 && maxYear < 3000) maxYear ++
-
-                        let years = []
-                        for (let x = minYear; x <= maxYear; x++) years.push(x)
-                        this.timeslider.control.data = years
-
-                        console.log(`${minYear}-${maxYear}`)
-                        this.timeslider.start_label.html(minYear)
-                        this.timeslider.end_label.html(maxYear)
-
-                        this.timeslider.control.sliderWidth = `${this.timeslider.div.width() - 50}px`
-                        this.timeslider.control.value1 = minYear
-                        this.timeslider.control.value2 = maxYear
-                        this.timeslider.control.step = 1
-                        this.timeslider.control.sliderBg = this.timeslider.colors.background
-                        this.timeslider.control.sliderBgFill = this.timeslider.colors.secondary
-                        this.timeslider.control.marksEnabled = true
-                        this.timeslider.control.marksCount = 5
-                        this.timeslider.control.marksValuesCount = 5
-
-                        this.timeslider.control.addEventListener('change', evt => {
-                            let startYear = parseInt(evt.detail.value1)
-                            let endYear = parseInt(evt.detail.value2)
-
-                            this.search_params[`r_${this.search.timeslider_field}`] = `${startYear}to${endYear}`
-                            this.timeslider.start_label.html(startYear)
-                            this.timeslider.end_label.html(endYear)
-
-                            clearTimeout(this.timeslider_timer)
-                            this.timeslider_timer = setTimeout(() => this.load_page(), 1000)
-                        })
-
-                        console.log(this.timeslider)
-                    })
-                //
-
-                // todo: get min and max vals
-                // setup timeslider control
-                // setup timeslider change events
-            }
-
-            // default search settings
-            this.search_timer = null
-            this.search_params = {
-                'page-size': this.search.page_size,
-                'page': 1,
             }
 
             // setup default sorting, if configured
@@ -689,6 +647,8 @@ class CorpusSearch {
                             row_html += `</tr>`
                             sender.table_body.append(row_html)
                         })
+
+                        if (sender.search.timeslider_field) sender.updateTimeslider()
                     } else {
                         sender.total_indicator.hide()
                         sender.table_body.append(`
@@ -704,29 +664,37 @@ class CorpusSearch {
         )
     }
 
-    async get_time_stats(field) {
-        let endPoint = `${this.corpora.host}/api/corpus/${this.corpus.id}/${this.content_type}/?page-size=0`
-        let min = null
-        let max = null
+    async updateTimeslider() {
+        let endPoint = `${this.corpora.host}/api/corpus/${this.corpus.id}/${this.content_type}/`
+        let minStat = null
+        let maxStat = null
+        let criteria = Object.assign({}, this.search_params)
+        let getParams = []
 
-        if (field.type === 'date') {
+        criteria['page-size'] = 0
+        delete criteria['page']
+
+        Object.keys(criteria).forEach(param => getParams.push(`${param}=${criteria[param]}`))
+        endPoint = `${endPoint}?${getParams.join('&')}`
+
+        if (this.timeslider.field.type === 'date') {
             const [minDateReq, maxDateReq] = await Promise.all([
-                fetch(`${endPoint}&a_min_mindate=${field.name}`).then(res => res.json()),
-                fetch(`${endPoint}&a_max_maxdate=${field.name}`).then(res => res.json())
+                fetch(`${endPoint}&a_min_mindate=${this.timeslider.field.name}`).then(res => res.json()),
+                fetch(`${endPoint}&a_max_maxdate=${this.timeslider.field.name}`).then(res => res.json())
             ])
 
             if (
                 this.corpora.hasProps(minDateReq, 'meta.aggregations.mindate') &&
                 this.corpora.hasProps(maxDateReq, 'meta.aggregations.maxdate')
             ) {
-                min = minDateReq.meta.aggregations.mindate
-                max = maxDateReq.meta.aggregations.maxdate
+                minStat = minDateReq.meta.aggregations.mindate
+                maxStat = maxDateReq.meta.aggregations.maxdate
             }
-        } else if (field.type === 'timespan') {
+        } else if (this.timeslider.field.type === 'timespan') {
             const [minStartReq, maxStartReq, maxEndReq] = await Promise.all([
-                fetch(`${endPoint}&a_min_minstart=${field.name}.start`).then(res => res.json()),
-                fetch(`${endPoint}&a_max_maxstart=${field.name}.start`).then(res => res.json()),
-                fetch(`${endPoint}&a_max_maxend=${field.name}.end`).then(res => res.json())
+                fetch(`${endPoint}&a_min_minstart=${this.timeslider.field.name}.start`).then(res => res.json()),
+                fetch(`${endPoint}&a_max_maxstart=${this.timeslider.field.name}.start`).then(res => res.json()),
+                fetch(`${endPoint}&a_max_maxend=${this.timeslider.field.name}.end`).then(res => res.json())
             ])
 
             if (
@@ -736,14 +704,61 @@ class CorpusSearch {
             ) {
                 let maxEnd = maxEndReq.meta.aggregations.maxend
 
-                min = minStartReq.meta.aggregations.minstart
-                max = maxStartReq.meta.aggregations.maxstart
+                minStat = minStartReq.meta.aggregations.minstart
+                maxStat = maxStartReq.meta.aggregations.maxstart
 
-                if (maxEnd && maxEnd > max) max = maxEnd
+                if (maxEnd && maxEnd > maxStat) maxStat = maxEnd
             }
         }
 
-        return [min, max]
+        if (minStat !== null && maxStat !== null) {
+            minStat = parseInt(this.corpora.date_string(minStat, 'Year'))
+            maxStat = parseInt(this.corpora.date_string(maxStat, 'Year'))
+
+            if (!this.timeslider.initialized) {
+                this.timeslider.minYear = minStat
+                this.timeslider.maxYear = maxStat
+
+                let years = []
+                for (let x = this.timeslider.minYear; x <= this.timeslider.maxYear; x++) years.push(x)
+                this.timeslider.control.data = years
+
+                this.timeslider.control.sliderWidth = `${this.timeslider.div.width() - 50}px`
+                this.timeslider.control.step = 1
+                this.timeslider.control.sliderBg = this.timeslider.colors.background
+                this.timeslider.control.sliderBgFill = this.timeslider.colors.secondary
+                this.timeslider.control.marksEnabled = true
+                this.timeslider.control.marksCount = 5
+                this.timeslider.control.marksValuesCount = 5
+
+                this.timeslider.control.addEventListener('change', evt => {
+                    if (!this.timeslider.autoUpdating) {
+                        this.timeslider.minYear = parseInt(evt.detail.value1)
+                        this.timeslider.maxYear = parseInt(evt.detail.value2)
+
+                        this.search_params[`r_${this.timeslider.field.name}`] = `${this.timeslider.minYear}to${this.timeslider.maxYear}`
+                        this.timeslider.start_label.html(this.timeslider.minYear)
+                        this.timeslider.end_label.html(this.timeslider.maxYear)
+
+                        clearTimeout(this.timeslider.timer)
+                        this.timeslider.timer = setTimeout(() => this.load_page(), 1000)
+                    }
+                })
+                this.timeslider.initialized = true
+
+            } else if (!(`r_${this.timeslider.field.name}` in this.search_params)) {
+                this.timeslider.minYear = minStat
+                this.timeslider.maxYear = maxStat
+            }
+
+            this.timeslider.start_label.html(this.timeslider.minYear)
+            this.timeslider.end_label.html(this.timeslider.maxYear)
+
+            this.timeslider.autoUpdating = true
+            this.timeslider.control.value1 = this.timeslider.minYear
+            this.timeslider.control.value2 = this.timeslider.maxYear
+            setTimeout(() => this.timeslider.autoUpdating = false, 300)
+        }
     }
 
     convert_field_value(val, field) {
