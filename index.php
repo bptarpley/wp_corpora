@@ -5,7 +5,7 @@
 * Description: A plugin for allowing a Wordpress frontend to interface with Corpora as a backend
 * Author: Bryan Tarpley
 * Author URI: https://codhr.tamu.edu
-* Version: 1.0.0
+* Version: 1.0.1
 * License: GPL2+
 * License URI: https://www.gnu.org/licenses/gpl-2.0.txt
 *
@@ -26,6 +26,13 @@
 
     function corpora_enqueue_scripts()
     {
+        // Get plugin version for cache busting
+        if (!function_exists('get_plugin_data')) {
+            require_once(ABSPATH . 'wp-admin/includes/plugin.php');
+        }
+        $plugin_data = get_plugin_data(__FILE__);
+        $plugin_version = $plugin_data['Version'];
+
         // Register Javascript
         wp_enqueue_script('jquery');
         wp_enqueue_script('jquery-mark', plugin_dir_url(__FILE__).'js/jquery.mark.min.js');
@@ -41,12 +48,13 @@
                 'jquery',
                 'jquery-mark',
                 'corpora-openseadragon'
-            )
+            ),
+            $plugin_version
         ); //your javascript library
 
         // Register CSS
         wp_enqueue_style('dashicons');
-        wp_enqueue_style('corpora-css', plugin_dir_url( __FILE__ ).'css/corpora.css');
+        wp_enqueue_style('corpora-css', plugin_dir_url( __FILE__ ).'css/corpora.css', $plugin_version);
         wp_enqueue_style('leaflet-css', plugin_dir_url( __FILE__ ).'js/leaflet/leaflet.css');
     }
     add_action('wp_enqueue_scripts','corpora_enqueue_scripts');
