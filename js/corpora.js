@@ -231,7 +231,7 @@ class Corpora {
     date_string(timestamp, granularity='Day') {
         let date = new Date(timestamp)
         if (granularity === 'Day')
-            return date.toISOString().split('T')[0]
+            return date.toLocaleString('default', {month: 'numeric', day: 'numeric', year: 'numeric'})
         else if (granularity === 'Year')
             return date.toLocaleString('default', { year: 'numeric' })
         else if (granularity === 'Month')
