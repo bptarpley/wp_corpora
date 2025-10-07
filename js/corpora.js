@@ -251,8 +251,12 @@ class Corpora {
             representation += this.date_string(timespan.start, granularity)
 
             if (timespan.end) {
-                representation += ` – ${this.date_string(timespan.end, timespan.granularity)}`
-                uncertain_prefix = 'Between'
+                let end_representation = this.date_string(timespan.end, timespan.granularity)
+
+                if (representation !== end_representation) {
+                    representation += ` – ${end_representation}`
+                    uncertain_prefix = 'Between'
+                }
             }
 
             if (timespan.uncertain) {
